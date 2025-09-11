@@ -1,0 +1,23 @@
+services:
+  bot-450:
+    build: .
+    container_name: bot-450
+    ports:
+      - "8080:8080"
+    depends_on:
+      - signal-api
+    env_file:
+      - .env
+
+  signal-api:
+    image: bbernhard/signal-cli-rest-api:latest
+    container_name: signal-api
+    restart: unless-stopped
+    environment:
+      - MODE=native
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./signal-cli-data:/home/.local/share/signal-cli
+    env_file:
+      - .env
