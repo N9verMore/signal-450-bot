@@ -1,6 +1,5 @@
 package org.atics.bot450.service;
 
-import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.atics.bot450.message.GroupPayload;
 import org.atics.bot450.message.MessagePayload;
