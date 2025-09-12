@@ -15,8 +15,6 @@ services:
     restart: unless-stopped
     environment:
       - MODE=native
-    ports:
-      - "8081:8080"
     volumes:
       - ./signal-cli-data:/home/.local/share/signal-cli
     env_file:
