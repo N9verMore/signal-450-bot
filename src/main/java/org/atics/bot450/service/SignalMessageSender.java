@@ -20,34 +20,41 @@ public class SignalMessageSender {
     private final RestTemplate restTemplate;
     private final String apiUrl;
     private final String groupName;
-    private final String senderNumber;
+    private final String senderNumbersString;
     private final String stringMessage;
 
     public SignalMessageSender(RestTemplate restTemplate, @Value("${org.atics.bot450.cron.time}") String cronTime,
                                @Value("${org.atics.signal.api.url}") String apiUrl,
                                @Value("${org.atics.signal.group.name}") String groupName,
-                               @Value("${org.atics.signal.sender.number}") String senderNumber,
+                               @Value("${org.atics.signal.sender.number}") String senderNumbersString,
                                @Value("${org.atics.bot450.message}") String stringMessage) {
         this.cronTime = cronTime;
         this.restTemplate = restTemplate;
         this.apiUrl = apiUrl;
         this.groupName = groupName;
-        this.senderNumber = senderNumber;
+        this.senderNumbersString = senderNumbersString;
         this.stringMessage = stringMessage;
     }
 
     @Scheduled(cron = "${org.atics.bot450.cron.time}")
-    public void sendScheduledMessage() {
+    public void startMessageBroadcast(){
+        List<String> numbers = parseSenderNumbers();
+        for(String number : numbers){
+            sendScheduledMessage(number);
+        }
+    }
+
+    private void sendScheduledMessage(String number) {
         System.out.println("📩 Відправка доповіді у " + java.time.LocalDateTime.now());
         String url = apiUrl + "/v2/send";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        List<String> groupId = List.of(Optional.of(getGroupId(groupName))
+        List<String> groupId = List.of(Optional.of(getGroupId(groupName, number))
                 .orElseThrow(() -> new IllegalArgumentException("Group id with name " + groupName + " haven`t found")));
 
-        var payload = new MessagePayload(stringMessage, senderNumber, groupId);
+        var payload = new MessagePayload(stringMessage, number, groupId);
 
         HttpEntity<MessagePayload> request = new HttpEntity<>(payload, headers);
 
@@ -60,8 +67,8 @@ public class SignalMessageSender {
         }
     }
 
-    private String getGroupId(String groupName) {
-        String url = apiUrl + "/v1/groups/" + senderNumber;
+    private String getGroupId(String groupName, String number) {
+        String url = apiUrl + "/v1/groups/" + number;
         List<GroupPayload> groupPayloadList;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -79,5 +86,9 @@ public class SignalMessageSender {
         }
         return groupPayloadList.stream().filter(group -> group.getName().equals(groupName))
                 .map(GroupPayload::getId).findFirst().orElse(null);
+    }
+
+    private List<String> parseSenderNumbers() {
+        return Arrays.stream(this.senderNumbersString.split(",")).toList();
     }
 }
