@@ -1,0 +1,12 @@
+@import url('/css/global.css');
+
+.grid{
+    display:grid; grid-template-columns: 1.2fr .8fr; gap:24px;
+}
+.time-list{display:flex; flex-direction:column; gap:10px}
+.time-item{display:grid; grid-template-columns:1fr 120px 42px; gap:10px; align-items:center}
+.time-item .btn{height:40px}
+.switch{
+    display:inline-flex; gap:8px; align-items:center; color:var(--muted); font-size:14px;
+}
+.group-row{display:flex; gap:10px}

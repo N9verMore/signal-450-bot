@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="layout (title, styles, headerTitle, content, scripts)">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:replace="${title}">App</title>
+    <link rel="stylesheet" href="/css/global.css"/>
+    <th:block th:replace="${styles}"></th:block>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1 th:replace="${headerTitle}">Bot 450</h1>
+        <div class="actions">
+            <a class="btn ghost" href="/scheduler">Scheduler</a>
+            <a class="btn ghost" href="/tasks">Tasks</a>
+            <form th:action="@{/logout}" method="post" style="display:inline">
+                <button class="btn secondary" type="submit">Log out</button>
+            </form>
+        </div>
+    </div>
+
+    <main th:replace="${content}">
+        <!-- page content -->
+    </main>
+
+    <div class="footer">© Bot-450 · Keycloak &amp; Signal</div>
+</div>
+<th:block th:replace="${scripts} ?: ~{}"></th:block>
+</body>
+</html>

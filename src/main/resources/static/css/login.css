@@ -1,0 +1,10 @@
+@import url('/css/global.css');
+
+.hero{
+    display:grid; grid-template-columns:1.1fr .9fr; gap:24px; align-items:center;
+}
+.hero .left h1{font-size:40px; margin:0 0 10px}
+.hero .left p{color:var(--muted); margin:0 0 22px}
+.hero .right .card{padding:30px}
+.sso{display:flex; flex-direction:column; gap:12px}
+.sso .btn{width:100%}

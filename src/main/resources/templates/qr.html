@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout (~{::title}, ~{::link}, ~{::header}, ~{::main}, ~{::scripts})}">
+<head>
+    <title th:fragment="title">Signal Linking</title>
+
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" href="/css/qr.css"/>
+    </th:block>
+</head>
+<body>
+<header th:fragment="header">
+    <span>Account linking</span>
+</header>
+<main th:fragment="content">
+    <div class="card" style="text-align:center">
+        <h2>Scan this QR in Signal</h2>
+        <img src="/qr" alt="QR code" style="width:250px;height:250px"/>
+        <p class="label">You will be signed in automatically after scanning.</p>
+    </div>
+</main>
+<th:block th:fragment="scripts">
+    <script th:src="@{/js/qr.js}"></script>
+</th:block>
+</body>
+</html>

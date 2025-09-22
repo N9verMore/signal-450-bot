@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout (~{::title}, ~{::link}, ~{::body/header}, ~{::main},  ~{::scripts} )">
+<head>
+    <title>Scheduler</title>
+    <link rel="stylesheet" href="/css/scheduler.css"/>
+    <script defer src="/js/scheduler.js"></script>
+</head>
+<body>
+<header th:fragment="headerTitle">
+    <span>Message Scheduler</span>
+</header>
+<main th:fragment="content">
+    <div class="grid">
+        <div class="card">
+            <form th:action="@{/schedule}" method="post">
+                <div class="form-row">
+                    <div class="field">
+                        <label class="label">Group</label>
+                        <input class="input" name="groupName" th:value="${defaultGroupName}" placeholder="e.g. Dept-450" required/>
+                    </div>
+                    <div class="field">
+                        <label class="label">Time mode</label>
+                        <select id="mode-select" class="input" name="mode">
+                            <option value="absolute">Absolute (HH:mm)</option>
+                            <option value="cron">Cron</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="field">
+                        <label class="label">Message</label>
+                        <textarea class="input" name="message" rows="5" placeholder="Text to be sent to Signal..." required></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="field">
+                        <label class="label">Send times</label>
+                        <div id="time-list" class="time-list">
+                            <div class="time-item">
+                                <input class="input" name="times" placeholder="HH:mm">
+                                <select class="input" name="mode">
+                                    <option value="absolute" selected>Absolute</option>
+                                    <option value="cron">Cron</option>
+                                </select>
+                                <button type="button" class="btn danger" onclick="this.closest('.time-item').remove()">×</button>
+                            </div>
+                        </div>
+                        <div style="margin-top:10px">
+                            <button id="add-time" type="button" class="btn secondary">+ Add time</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:16px">
+                    <button class="btn" type="submit">Save schedule</button>
+                    <a class="btn secondary" href="/tasks">Back to tasks</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0">Tips</h3>
+            <p class="label">Absolute: <span class="tag">08:30</span>, <span class="tag">19:45</span></p>
+            <p class="label">Cron: <span class="tag">0 31 8,19 * * *</span> (m h dom mon dow)</p>
+            <p class="label">Groups are pulled from the Signal API.</p>
+        </div>
+    </div>
+</main>
+</body>
+</html>

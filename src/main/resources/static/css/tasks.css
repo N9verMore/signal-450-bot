@@ -1,0 +1,5 @@
+@import url('/css/global.css');
+
+.search{display:flex; gap:10px; margin-bottom:16px}
+.status-dot{width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:8px; background:var(--ok)}
+.empty{color:var(--muted); text-align:center; padding:30px}

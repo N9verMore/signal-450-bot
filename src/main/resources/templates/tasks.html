@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout (~{::title}, ~{::link}, ~{::body/header}, ~{::main},  ~{::scripts})">
+<head>
+    <title>Tasks</title>
+    <link rel="stylesheet" href="/css/tasks.css"/>
+</head>
+<body>
+<header th:fragment="headerTitle">
+    <span>Scheduled Messages</span>
+</header>
+<main th:fragment="content">
+    <div class="card">
+        <div class="search">
+            <input class="input" placeholder="Search by message/group..." />
+            <a class="btn" href="/scheduler">+ New Task</a>
+        </div>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Group</th>
+                <th>Message</th>
+                <th>Time(s)</th>
+                <th>Author</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(tasks)}">
+                <td colspan="5" class="empty">No tasks yet</td>
+            </tr>
+            <tr th:each="t : ${tasks}">
+                <td th:text="${t.groupName}">Alpha</td>
+                <td th:text="${t.message}">Text</td>
+                <td>
+                    <span th:each="tm : ${t.times}" class="tag" th:text="${tm}" style="margin-right:6px">08:30</span>
+                </td>
+                <td th:text="${t.createdBy}">user</td>
+                <td class="actions">
+                    <form th:action="@{/tasks/{id}(id=${t.id})}" method="post" th:object="${t}">
+                        <button class="btn danger" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>
