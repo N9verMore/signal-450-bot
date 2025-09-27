@@ -1,6 +1,7 @@
 async function checkStatusOnce() {
     try {
-        const r = await fetch('/status?mobileNumber=' + mobileNumber, { cache: 'no-store', credentials: 'same-origin' });
+        // Encode the mobile number so that '+' and other special characters are transmitted correctly
+        const r = await fetch('/status?mobileNumber=' + encodeURIComponent(mobileNumber), { cache: 'no-store', credentials: 'same-origin' });
         const j = await r.json();
         console.log("Auth status:", j.authorized);
 
@@ -14,5 +15,5 @@ async function checkStatusOnce() {
         setTimeout(checkStatusOnce, 3000);
     }
 }
-const mobileNumber = new URL(document.currentScript.src).searchParams.get('mobileNumber')
-checkStatusOnce(mobileNumber);
+const mobileNumber = new URL(document.currentScript.src).searchParams.get('mobileNumber');
+checkStatusOnce();

@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.atics.bot450.exception.UserAlreadyExistsException;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -24,6 +25,7 @@ import java.util.Collections;
 import java.util.Map;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class KeycloakUserService {
 
@@ -76,14 +78,10 @@ public class KeycloakUserService {
             user.setCredentials(Collections.singletonList(cred));
 
             try {
-                Response resp = usersResource.create(user);
-                if (resp.getStatus() == 409) {
-                    throw new UserAlreadyExistsException("User already exists");
-                }
+                usersResource.create(user);
+                log.info("User created: {}", user.getUsername());
             } catch (ClientErrorException e) {
-                if (e.getResponse() != null && e.getResponse().getStatus() == 409) {
-                    throw new UserAlreadyExistsException("User already exists");
-                }
+                log.error("Failed to create user", e);
                 throw e;
             }
         }
