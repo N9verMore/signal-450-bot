@@ -13,7 +13,6 @@ public class SecurityConfig {
 
     @Bean
     SecurityContextRepository securityContextRepository() {
-        // Храним контекст в сессии
         return new HttpSessionSecurityContextRepository();
     }
 
@@ -24,7 +23,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/", "/register", "/qr-page", "/qr", "/status",
-                                "/css/**", "/js/**", "/images/**", "/login"
+                                "/css/**", "/js/**", "/images/**", "/login",
+                                "/oauth2/**", "/login/oauth2/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

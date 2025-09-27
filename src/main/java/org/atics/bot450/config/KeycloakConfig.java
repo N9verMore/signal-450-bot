@@ -25,12 +25,15 @@ public class KeycloakConfig {
     @Value("${keycloak.realm}")
     private String realm;
 
+    @Value("${keycloak.admin.realm:master}")
+    private String adminRealm;
+
     @Bean
     public Keycloak keycloak() {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
-                .realm("master") // ⚡ используем твой realm из .env, а не "master"
-                .clientId("admin-cli")
+                .realm(adminRealm)
+                .clientId(clientId)
                 .username(username)
                 .password(password)
                 .grantType(OAuth2Constants.PASSWORD)
