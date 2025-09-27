@@ -20,7 +20,7 @@
     </div>
 </main>
 <th:block th:fragment="scripts">
-    <script th:src="@{/js/qr.js}"></script>
+    <script th:src="@{/js/qr.js(mobileNumber=${param.mobileNumber})}"></script>
 </th:block>
 </body>
 </html>

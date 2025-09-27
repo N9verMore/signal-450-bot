@@ -1,6 +1,6 @@
 async function checkStatusOnce() {
     try {
-        const r = await fetch('/status', { cache: 'no-store', credentials: 'same-origin' });
+        const r = await fetch('/status?mobileNumber=' + mobileNumber, { cache: 'no-store', credentials: 'same-origin' });
         const j = await r.json();
         console.log("Auth status:", j.authorized);
 
@@ -14,5 +14,5 @@ async function checkStatusOnce() {
         setTimeout(checkStatusOnce, 3000);
     }
 }
-
-checkStatusOnce();
+const mobileNumber = new URL(document.currentScript.src).searchParams.get('mobileNumber')
+checkStatusOnce(mobileNumber);

@@ -23,14 +23,9 @@ public class QrService {
 
     private final RestTemplate restTemplate;
     private final String signalApiUrl;
-    private final SecurityContextRepository securityContextRepository;
-    @Setter
-    @Getter
-    private String registeredNumber;
     private final String DEVICE_NAME = "signal-api";
 
-    public QrService(@Value("${org.atics.signal.api.url}") String signalApiUrl, SecurityContextRepository securityContextRepository) {
-        this.securityContextRepository = securityContextRepository;
+    public QrService(@Value("${org.atics.signal.api.url}") String signalApiUrl) {
         this.restTemplate = new RestTemplate();
         this.signalApiUrl = signalApiUrl;
     }
@@ -42,37 +37,13 @@ public class QrService {
         return response.getBody();
     }
 
-    public Map<String, Object> checkStatus(HttpServletRequest request, HttpServletResponse response) {
-        boolean authorized = isAuthorized();
-        if (authorized) {
-            UserDetails userDetails = User.withUsername(getRegisteredNumber())
-                    .password("")
-                    .authorities("ROLE_USER")
-                    .build();
-
-            var authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(authentication);
-            SecurityContextHolder.setContext(context);
-
-            securityContextRepository.saveContext(context, request, response);
-
-            request.getSession(true)
-                    .setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
-        }
-        return Map.of("authorized", authorized);
-    }
-
-
-    public boolean isAuthorized() {
-        if (registeredNumber == null) {
+    public boolean isAuthorized(String mobileNumber) {
+        if (mobileNumber == null) {
             return false;
         }
 
         try {
-            String url = signalApiUrl + "/v1/devices/" + registeredNumber;
+            String url = signalApiUrl + "/v1/devices/" + mobileNumber;
             ResponseEntity<LinkedDevice[]> response =
                     restTemplate.getForEntity(url, LinkedDevice[].class);
 

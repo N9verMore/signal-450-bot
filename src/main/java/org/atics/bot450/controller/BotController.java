@@ -1,12 +1,14 @@
 package org.atics.bot450.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.atics.bot450.exception.UserAlreadyExistsException;
 import org.atics.bot450.service.KeycloakUserService;
 import org.atics.bot450.service.QrService;
 import org.atics.bot450.service.TaskService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -29,11 +31,19 @@ public class BotController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestParam String phoneNumber,
-                           @RequestParam String password) {
-        keycloakUserService.registerUser(phoneNumber, password);
-        qrService.setRegisteredNumber(phoneNumber);
-        return "redirect:/qr-page?phoneNumber=" + phoneNumber;
+    public String register(@RequestParam String mobileNumber,
+                           @RequestParam String password,
+                           Model model,
+                           RedirectAttributes ra) {
+        try {
+            keycloakUserService.registerUser(mobileNumber, password);
+            ra.addAttribute("mobileNumber", mobileNumber);
+            return "redirect:/qr-page";
+        } catch (UserAlreadyExistsException e) {
+            model.addAttribute("error", "User already exists");
+            model.addAttribute("mobileNumber", mobileNumber);
+            return "register";
+        }
     }
 
     @GetMapping("/scheduler")

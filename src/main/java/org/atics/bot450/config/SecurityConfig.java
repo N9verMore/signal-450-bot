@@ -30,7 +30,12 @@ public class SecurityConfig {
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .logout(logout -> logout
+                .oauth2Login(o -> o
+                        .loginPage("/")
+                        .defaultSuccessUrl("/scheduler", true)
+                        .failureUrl("/?loginError")
+                )
+                .logout(l -> l
                         .logoutSuccessUrl("/")
                         .permitAll()
                 );
