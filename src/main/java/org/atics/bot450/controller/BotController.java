@@ -3,9 +3,9 @@ package org.atics.bot450.controller;
 import lombok.RequiredArgsConstructor;
 import org.atics.bot450.message.GroupPayload;
 import org.atics.bot450.model.Task;
-import org.atics.bot450.service.SignalMessageSender;
-import org.atics.bot450.service.TaskService;
 import org.atics.bot450.service.QrService;
+import org.atics.bot450.service.SignalService;
+import org.atics.bot450.service.TaskService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,24 +18,16 @@ import java.util.List;
 public class BotController {
 
     private final TaskService taskService;
-    private final SignalMessageSender signal;
+    private final SignalService signal;
     private final QrService qrService;
-
-    @GetMapping("/")
-    public String home() {
-        return "redirect:/scheduler";
-    }
 
     @GetMapping("/scheduler")
     public String schedulerPage(Authentication auth, Model model) {
         String user = auth != null ? auth.getName() : null;
         if (user == null) return "redirect:/login";
-
-        // Если не залинкован — кидаем на страницу привязки
         if (!qrService.isAuthorized(user)) {
             return "redirect:/link-account";
         }
-
         List<GroupPayload> groups = signal.listGroupsFor(user);
         model.addAttribute("groups", groups);
         return "scheduler";

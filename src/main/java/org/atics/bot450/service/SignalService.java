@@ -7,6 +7,7 @@ import org.atics.bot450.model.TaskEntity;
 import org.atics.bot450.model.TaskStatus;
 import org.atics.bot450.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class SignalMessageSender {
+public class SignalService {
 
     private final RestTemplate restTemplate;
     private final TaskRepository tasks;
@@ -26,16 +27,17 @@ public class SignalMessageSender {
 
     private final String apiUrl;
 
-    public SignalMessageSender(RestTemplate restTemplate,
-                               TaskRepository tasks,
-                               QrService qrService,
-                               @Value("${org.atics.signal.api.url}") String apiUrl) {
+    public SignalService(RestTemplate restTemplate,
+                         TaskRepository tasks,
+                         QrService qrService,
+                         @Value("${org.atics.signal.api.url}") String apiUrl) {
         this.restTemplate = restTemplate;
         this.tasks = tasks;
         this.qrService = qrService;
         this.apiUrl = apiUrl;
     }
 
+    @Cacheable("groups")
     public List<GroupPayload> listGroupsFor(String phoneNumber) {
         if (!qrService.isAuthorized(phoneNumber)) {
             return List.of();
@@ -68,7 +70,6 @@ public class SignalMessageSender {
         byOwner.forEach((owner, ownerTasks) -> {
             boolean linked = qrService.isAuthorized(owner);
             if (!linked) {
-                // помечаем как FAILED, чтобы не зацикливаться
                 ownerTasks.forEach(t -> t.setStatus(TaskStatus.FAILED));
                 tasks.saveAll(ownerTasks);
                 log.warn("Owner {} not linked to Signal. {} task(s) marked FAILED.", owner, ownerTasks.size());

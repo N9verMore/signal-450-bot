@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.atics.bot450.service.QrService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class QrController {
 
     @GetMapping("/qr-page")
     public String qrPage() {
-        return "qr"; // templates/qr.html
+        return "qr";
     }
 
     @GetMapping(value = "/qr", produces = MediaType.IMAGE_PNG_VALUE)
@@ -29,6 +30,7 @@ public class QrController {
 
     @GetMapping("/status")
     @ResponseBody
+    @Cacheable("qr-status")
     public Map<String, Object> checkStatus(HttpServletRequest request,
                                            HttpServletResponse response,
                                            @RequestParam String mobileNumber) {

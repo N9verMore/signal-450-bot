@@ -1,38 +1,42 @@
 package org.atics.bot450.controller;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.atics.bot450.message.GroupPayload;
+import org.atics.bot450.service.QrService;
+import org.atics.bot450.service.SignalService;
 import org.atics.bot450.service.UserService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@Slf4j
 public class AuthController {
 
     private final UserService userService;
 
+    private final SignalService signalService;
+
+    private final QrService qrService;
+
     @GetMapping("/")
-    public String home() {
-        return "redirect:/scheduler"; // защищённая — незалогиненных отправит на /login
+    public String home(Authentication auth) {
+        return (auth != null && auth.isAuthenticated())
+                ? "redirect:/scheduler"
+                : "login";
     }
 
     @GetMapping("/login")
-    public String login(@RequestParam(value = "error", required = false) String error,
-                        @RequestParam(value = "logout", required = false) String logout,
-                        Model model) {
-        if (error != null) model.addAttribute("error", "Invalid username or password");
-        if (logout != null) model.addAttribute("info", "You have been logged out");
+    public String login(Authentication auth) {
+        if (auth != null && auth.isAuthenticated()) {
+            return "redirect:/scheduler";
+        }
         return "login";
-    }
-
-    @GetMapping("/register")
-    public String registerForm(@RequestParam(value = "mobileNumber", required = false) String mobileNumber,
-                               Model model) {
-        model.addAttribute("mobileNumber", mobileNumber);
-        return "register";
     }
 
     @PostMapping("/register")
@@ -45,13 +49,23 @@ public class AuthController {
             model.addAttribute("mobileNumber", mobileNumber);
             return "register";
         }
-        try {
-            userService.register(mobileNumber, password);
-        } catch (IllegalArgumentException e) {
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("mobileNumber", mobileNumber);
-            return "register";
+        userService.register(mobileNumber, password);
+        if(qrService.isAuthorized(mobileNumber)) {
+            return "redirect:/scheduler";
         }
-        return "redirect:/login?registered";
+        return "redirect:linkAccount";
+    }
+
+    @GetMapping("/register")
+    public String register(Authentication auth) {
+        if (auth != null && auth.isAuthenticated()) {
+            return "redirect:/scheduler";
+        }
+        return "register";
+    }
+
+    @GetMapping("/link-account")
+    public String linkAccountPage() {
+        return "linkAccount";
     }
 }

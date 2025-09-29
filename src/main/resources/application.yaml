@@ -37,7 +37,7 @@ org:
         time: ${CRON_TIME:}
     signal:
       api:
-        url: ${SIGNAL_API_URL:http://signal-api:8080}
+        url: ${SIGNAL_API_URL:http://localhost:8081}
       group:
         name: ${SIGNAL_GROUP_NAME:}
       sender:

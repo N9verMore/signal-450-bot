@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class TaskService {
 
     private final TaskRepository repo;
-    private final SignalMessageSender signal; // для resolveGroupIdByName если нужно
+    private final SignalService signal;
 
     /** Создаём сразу несколько задач — по каждому выбранному времени. */
     @Transactional
@@ -33,7 +33,6 @@ public class TaskService {
 
         if (isGroupId) {
             groupId = groupIdOrName;
-            // Находим name через список групп (на будущее, чтобы в таблице красиво показывать)
             groupName = signal.listGroupsFor(ownerUsername).stream()
                     .filter(g -> Objects.equals(g.getId(), groupId))
                     .map(g -> Optional.ofNullable(g.getName()).orElse(g.getId()))
