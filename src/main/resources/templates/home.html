@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout (~{::title}, ~{::link}, ~{::header},  ~{::main},  ~{::scripts})">
+<head>
+    <title>Sign in</title>
+    <link rel="stylesheet" href="/css/login.css"/>
+</head>
+<body>
+<header th:fragment="headerTitle">
+    <span>Welcome</span>
+</header>
+<main th:fragment="content">
+    <div class="hero">
+        <div class="left">
+            <h1>Signal Broadcast Automation</h1>
+            <p>Sign in via Keycloak to manage groups, send times, and messages.</p>
+            <div class="tag">Secured by OAuth2 / OIDC</div>
+        </div>
+        <div class="right">
+            <div class="card">
+                <div class="sso">
+                    <a class="btn" href="/oauth2/authorization/keycloak">Sign in with Keycloak</a>
+                    <a class="btn secondary" href="/register">Sign up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

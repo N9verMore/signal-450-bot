@@ -4,6 +4,11 @@
 <head>
     <title>Tasks</title>
     <link rel="stylesheet" href="/css/tasks.css"/>
+    <style>
+        .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center;}
+        .modal{background:#fff; border-radius:16px; padding:20px; width:520px; max-width:95%;}
+        .modal.show{display:flex;}
+    </style>
 </head>
 <body>
 <header th:fragment="headerTitle">
@@ -20,24 +25,23 @@
             <tr>
                 <th>Group</th>
                 <th>Message</th>
-                <th>Time(s)</th>
+                <th>Time</th>
                 <th>Author</th>
-                <th></th>
+                <th style="width:180px"></th>
             </tr>
             </thead>
             <tbody>
             <tr th:if="${#lists.isEmpty(tasks)}">
                 <td colspan="5" class="empty">No tasks yet</td>
             </tr>
-            <tr th:each="t : ${tasks}">
+            <tr th:each="t : ${tasks}" th:data-id="${t.id}" th:data-msg="${t.message}" th:data-time="${#lists.isEmpty(t.times) ? '' : t.times[0]}">
                 <td th:text="${t.groupName}">Alpha</td>
                 <td th:text="${t.message}">Text</td>
-                <td>
-                    <span th:each="tm : ${t.times}" class="tag" th:text="${tm}" style="margin-right:6px">08:30</span>
-                </td>
+                <td th:text="${#lists.isEmpty(t.times) ? '' : t.times[0]}">2025-09-29T20:00</td>
                 <td th:text="${t.createdBy}">user</td>
-                <td class="actions">
-                    <form th:action="@{/tasks/{id}(id=${t.id})}" method="post" th:object="${t}">
+                <td class="actions" style="display:flex; gap:8px">
+                    <button type="button" class="btn secondary" onclick="openEdit(this)">Edit</button>
+                    <form th:action="@{/tasks/{id}/delete(id=${t.id})}" method="post">
                         <button class="btn danger" type="submit">Delete</button>
                     </form>
                 </td>
@@ -45,6 +49,57 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal-backdrop">
+        <div class="modal">
+            <h3>Edit task</h3>
+            <form id="editForm" method="post">
+                <div class="form-row">
+                    <div class="field">
+                        <label class="label">Message</label>
+                        <textarea class="input" name="message" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label class="label">Send time</label>
+                        <input class="input" type="datetime-local" name="time" required/>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:12px">
+                    <button class="btn" type="submit">Save</button>
+                    <button class="btn secondary" type="button" onclick="closeEdit()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </main>
+
+<th:block th:fragment="scripts">
+    <script>
+        const modal = document.getElementById('modal');
+        const form = document.getElementById('editForm');
+
+        function openEdit(btn){
+            const tr = btn.closest('tr');
+            const id = tr.dataset.id;
+            const msg = tr.dataset.msg;
+            const time = tr.dataset.time?.slice(0,16); // datetime-local формат
+
+            form.action = `/tasks/${id}/update`;
+            form.message.value = msg || '';
+            form.time.value = time || '';
+
+            modal.classList.add('show');
+        }
+        function closeEdit(){
+            modal.classList.remove('show');
+        }
+        modal.addEventListener('click', e => {
+            if(e.target === modal) closeEdit();
+        });
+    </script>
+</th:block>
 </body>
 </html>

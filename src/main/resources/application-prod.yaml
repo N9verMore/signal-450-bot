@@ -1,0 +1,40 @@
+server:
+  port: 8080
+  servlet:
+    session:
+      tracking-modes: cookie
+  forward-headers-strategy: native
+
+spring:
+  application:
+    name: bot-450
+
+  datasource:
+    url: jdbc:h2:file:/app/data/bot450db
+    driverClassName: org.h2.Driver
+    username: ${H2_USERNAME}
+    password: ${H2_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+    open-in-view: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+org:
+  atics:
+    bot450:
+      message: ${SIGNAL_MESSAGE:}
+      cron:
+        time: ${CRON_TIME:}
+    signal:
+      api:
+        url: ${SIGNAL_API_URL:http://signal-api:8080}
+      group:
+        name: ${SIGNAL_GROUP_NAME:}
+      sender:
+        number: ${SIGNAL_SENDER_NUMBER:}

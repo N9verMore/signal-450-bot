@@ -1,77 +1,102 @@
 package org.atics.bot450.service;
 
-import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.atics.bot450.message.GroupPayload;
 import org.atics.bot450.message.MessagePayload;
+import org.atics.bot450.model.TaskEntity;
+import org.atics.bot450.model.TaskStatus;
+import org.atics.bot450.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.*;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
-@Data
+@Slf4j
 public class SignalMessageSender {
-    private final String cronTime;
+
     private final RestTemplate restTemplate;
+    private final TaskRepository tasks;
+    private final QrService qrService;
+
     private final String apiUrl;
-    private final String groupName;
-    private final String senderNumbersString;
-    private final String stringMessage;
 
-    public SignalMessageSender(RestTemplate restTemplate, @Value("${org.atics.bot450.cron.time}") String cronTime,
-                               @Value("${org.atics.signal.api.url}") String apiUrl,
-                               @Value("${org.atics.signal.group.name}") String groupName,
-                               @Value("${org.atics.signal.sender.number}") String senderNumbersString,
-                               @Value("${org.atics.bot450.message}") String stringMessage) {
-        this.cronTime = cronTime;
+    public SignalMessageSender(RestTemplate restTemplate,
+                               TaskRepository tasks,
+                               QrService qrService,
+                               @Value("${org.atics.signal.api.url}") String apiUrl) {
         this.restTemplate = restTemplate;
+        this.tasks = tasks;
+        this.qrService = qrService;
         this.apiUrl = apiUrl;
-        this.groupName = groupName;
-        this.senderNumbersString = senderNumbersString;
-        this.stringMessage = stringMessage;
     }
 
-    @Scheduled(cron = "${org.atics.bot450.cron.time}")
-    public void startMessageBroadcast(){
-        List<String> numbers = parseSenderNumbers();
-        for(String number : numbers){
-            sendScheduledMessage(number);
+    public List<GroupPayload> listGroupsFor(String phoneNumber) {
+        if (!qrService.isAuthorized(phoneNumber)) {
+            return List.of();
         }
+        return fetchGroups(phoneNumber);
     }
 
-    private void sendScheduledMessage(String number) {
-        System.out.println("📩 Відправка доповіді у " + java.time.LocalDateTime.now());
+    public void sendToGroup(String senderNumber, String groupId, String message) {
         String url = apiUrl + "/v2/send";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        List<String> groupId = List.of(Optional.of(getGroupId(groupName, number))
-                .orElseThrow(() -> new IllegalArgumentException("Group id with name " + groupName + " haven`t found")));
-
-        var payload = new MessagePayload(stringMessage, number, groupId);
-
+        MessagePayload payload = new MessagePayload(message, senderNumber, List.of(groupId));
         HttpEntity<MessagePayload> request = new HttpEntity<>(payload, headers);
 
         ResponseEntity<String> resp = restTemplate.postForEntity(url, request, String.class);
-
         if (!resp.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Failed to send message: " + resp.getStatusCode() + " / " + resp.getBody());
-        } else {
-            System.out.println("📩 Доповідь успішно відправлена о: " + java.time.LocalDateTime.now());
+            throw new RuntimeException("Signal send failed: " + resp.getStatusCode() + " / " + resp.getBody());
         }
     }
 
-    private String getGroupId(String groupName, String number) {
+    @Scheduled(fixedDelay = 15_000)
+    public void dispatchDueTasks() {
+        LocalDateTime now = LocalDateTime.now();
+        List<TaskEntity> due = tasks.findTop100ByStatusAndScheduledAtBeforeOrderByScheduledAtAsc(TaskStatus.PENDING, now);
+        if (due.isEmpty()) return;
+
+        Map<String, List<TaskEntity>> byOwner = due.stream().collect(Collectors.groupingBy(TaskEntity::getOwnerUsername));
+        byOwner.forEach((owner, ownerTasks) -> {
+            boolean linked = qrService.isAuthorized(owner);
+            if (!linked) {
+                // помечаем как FAILED, чтобы не зацикливаться
+                ownerTasks.forEach(t -> t.setStatus(TaskStatus.FAILED));
+                tasks.saveAll(ownerTasks);
+                log.warn("Owner {} not linked to Signal. {} task(s) marked FAILED.", owner, ownerTasks.size());
+                return;
+            }
+
+            for (TaskEntity t : ownerTasks) {
+                try {
+                    sendToGroup(owner, t.getGroupId(), t.getMessage());
+                    t.setStatus(TaskStatus.SENT);
+                    t.setSentAt(LocalDateTime.now());
+                    tasks.save(t);
+                    log.info("Task {} sent to group {} by {}", t.getId(), t.getGroupId(), owner);
+                } catch (Exception ex) {
+                    t.setStatus(TaskStatus.FAILED);
+                    tasks.save(t);
+                    log.error("Task {} failed: {}", t.getId(), ex.getMessage(), ex);
+                }
+            }
+        });
+    }
+
+    private List<GroupPayload> fetchGroups(String number) {
         String url = apiUrl + "/v1/groups/" + number;
-        List<GroupPayload> groupPayloadList;
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+
         HttpEntity<Void> request = new HttpEntity<>(headers);
         ResponseEntity<GroupPayload[]> response = restTemplate.exchange(
                 url,
@@ -79,16 +104,17 @@ public class SignalMessageSender {
                 request,
                 GroupPayload[].class
         );
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            groupPayloadList = Arrays.asList(response.getBody());
-        } else {
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
             throw new RuntimeException("Failed to fetch groups: " + response.getStatusCode());
         }
-        return groupPayloadList.stream().filter(group -> group.getName().equals(groupName))
-                .map(GroupPayload::getId).findFirst().orElse(null);
+        return Arrays.asList(response.getBody());
     }
 
-    private List<String> parseSenderNumbers() {
-        return Arrays.stream(this.senderNumbersString.split(",")).toList();
+    public Optional<String> resolveGroupIdByName(String number, String groupName) {
+        return listGroupsFor(number).stream()
+                .filter(g -> Objects.equals(g.getName(), groupName))
+                .map(GroupPayload::getId)
+                .findFirst();
     }
 }

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="fragments/layout :: layout (~{::title}, ~{::link}, ~{::body/header}, ~{::main}, ~{::scripts})">
+      th:replace="fragments/layout :: layout (~{::title}, ~{::link}, ~{::header},  ~{::main},  ~{::scripts})">
 <head>
     <title>Registration</title>
     <link rel="stylesheet" href="/css/register.css"/>
@@ -16,11 +16,9 @@
             <div th:if="${error}" class="error" th:text="${error}">User already exists</div>
             <form th:action="@{/register}" method="post">
                 <div class="form-row">
-                    <div class="form-row">
-                        <div class="field">
-                            <label class="label">Phone number</label>
-                            <input class="input" type="text" name="mobileNumber" th:value="${mobileNumber}" required/>
-                        </div>
+                    <div class="field">
+                        <label class="label">Phone number (username)</label>
+                        <input class="input" type="text" name="mobileNumber" th:value="${mobileNumber}" required/>
                     </div>
                 </div>
                 <div class="form-row">
@@ -33,9 +31,11 @@
                         <input class="input" type="password" name="password2" required/>
                     </div>
                 </div>
+                <!-- если включите CSRF -->
+                <!-- <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/> -->
                 <div style="display:flex; gap:10px; margin-top:12px">
                     <button class="btn" type="submit">Sign up</button>
-                    <a class="btn secondary" href="/">Back</a>
+                    <a class="btn secondary" href="/login">Back</a>
                 </div>
             </form>
         </div>

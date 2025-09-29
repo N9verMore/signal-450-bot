@@ -13,15 +13,29 @@
     <div class="hero">
         <div class="left">
             <h1>Signal Broadcast Automation</h1>
-            <p>Sign in via Keycloak to manage groups, send times, and messages.</p>
-            <div class="tag">Secured by OAuth2 / OIDC</div>
+            <p>Sign in to manage groups, send times, and messages.</p>
+            <div class="tag">Secured by Spring Security (form login)</div>
         </div>
         <div class="right">
             <div class="card">
-                <div class="sso">
-                    <a class="btn" href="/oauth2/authorization/keycloak">Sign in with Keycloak</a>
-                    <a class="btn secondary" href="/register">Sign up</a>
-                </div>
+                <div th:if="${error}" class="error" th:text="${error}">Login error</div>
+                <div th:if="${info}" class="info" th:text="${info}">Info</div>
+                <form th:action="@{/login}" method="post">
+                    <div class="field">
+                        <label class="label">Username (phone)</label>
+                        <input class="input" type="text" name="username" required/>
+                    </div>
+                    <div class="field">
+                        <label class="label">Password</label>
+                        <input class="input" type="password" name="password" required/>
+                    </div>
+                    <!-- если включите CSRF -->
+                    <!-- <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/> -->
+                    <div style="display:flex; gap:10px; margin-top:12px">
+                        <button class="btn" type="submit">Sign in</button>
+                        <a class="btn secondary" href="/register">Sign up</a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

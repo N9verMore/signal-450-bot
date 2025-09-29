@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout (~{::title}, ~{::link}, ~{::header},  ~{::main},  ~{::scripts})">
+<head>
+    <title>Link account</title>
+    <link rel="stylesheet" href="/css/register.css"/>
+</head>
+<body>
+<header th:fragment="headerTitle">
+    <span>Link Signal</span>
+</header>
+<main th:fragment="content">
+    <div class="form">
+        <div class="card">
+            <h2>Link your Signal account</h2>
+            <p>Scan this QR with Signal to link your number. As soon as we detect the link, you’ll be redirected to the scheduler.</p>
+            <div style="display:flex; gap:24px; align-items:center; margin-top:16px;">
+                <img alt="Signal QR" src="/qr" style="width:220px; height:220px; image-rendering: pixelated;"/>
+                <div>
+                    <div id="status">Waiting for link...</div>
+                    <div class="tag" style="margin-top:8px">The page checks status every 3 seconds</div>
+                </div>
+            </div>
+            <div style="margin-top:16px;">
+                <a class="btn secondary" href="/scheduler">Back</a>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="scripts">
+    <script src="/js/qr-status.js"></script>
+</th:block>
+</body>
+</html>

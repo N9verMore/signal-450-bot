@@ -4,7 +4,6 @@
 <head>
     <title>Scheduler</title>
     <link rel="stylesheet" href="/css/scheduler.css"/>
-    <script defer src="/js/scheduler.js"></script>
 </head>
 <body>
 <header th:fragment="headerTitle">
@@ -17,13 +16,11 @@
                 <div class="form-row">
                     <div class="field">
                         <label class="label">Group</label>
-                        <input class="input" name="groupName" th:value="${defaultGroupName}" placeholder="e.g. Dept-450" required/>
-                    </div>
-                    <div class="field">
-                        <label class="label">Time mode</label>
-                        <select id="mode-select" class="input" name="mode">
-                            <option value="absolute">Absolute (HH:mm)</option>
-                            <option value="cron">Cron</option>
+                        <select class="input" name="groupId" required>
+                            <option value="" disabled selected>Select a group…</option>
+                            <option th:each="g : ${groups}"
+                                    th:value="${g.id}"
+                                    th:text="${g.name} ?: ${g.id}">Group</option>
                         </select>
                     </div>
                 </div>
@@ -37,15 +34,11 @@
 
                 <div class="form-row full">
                     <div class="field">
-                        <label class="label">Send times</label>
+                        <label class="label">Send time(s)</label>
                         <div id="time-list" class="time-list">
-                            <div class="time-item">
-                                <input class="input" name="times" placeholder="HH:mm">
-                                <select class="input" name="mode">
-                                    <option value="absolute" selected>Absolute</option>
-                                    <option value="cron">Cron</option>
-                                </select>
-                                <button type="button" class="btn danger" onclick="this.closest('.time-item').remove()">×</button>
+                            <div class="time-item" style="display:flex; gap:8px; align-items:center; margin-bottom:8px">
+                                <input class="input" type="datetime-local" name="times" required>
+                                <button type="button" class="btn danger" onclick="removeRow(this)">×</button>
                             </div>
                         </div>
                         <div style="margin-top:10px">
@@ -55,7 +48,7 @@
                 </div>
 
                 <div style="display:flex; gap:10px; margin-top:16px">
-                    <button class="btn" type="submit">Save schedule</button>
+                    <button class="btn" type="submit">Schedule</button>
                     <a class="btn secondary" href="/tasks">Back to tasks</a>
                 </div>
             </form>
@@ -63,11 +56,32 @@
 
         <div class="card">
             <h3 style="margin-top:0">Tips</h3>
-            <p class="label">Absolute: <span class="tag">08:30</span>, <span class="tag">19:45</span></p>
-            <p class="label">Cron: <span class="tag">0 31 8,19 * * *</span> (m h dom mon dow)</p>
-            <p class="label">Groups are pulled from the Signal API.</p>
+            <p class="label">You can add several future date-times.</p>
+            <p class="label">Messages will be sent from <strong>your linked number</strong> to the selected group.</p>
         </div>
     </div>
 </main>
+
+<th:block th:fragment="scripts">
+    <script>
+        function removeRow(btn) {
+            const row = btn.closest('.time-item');
+            const list = document.getElementById('time-list');
+            if (list.querySelectorAll('.time-item').length > 1) {
+                row.remove();
+            }
+        }
+        document.getElementById('add-time').addEventListener('click', () => {
+            const list = document.getElementById('time-list');
+            const div = document.createElement('div');
+            div.className = 'time-item';
+            div.style.cssText = 'display:flex; gap:8px; align-items:center; margin-bottom:8px';
+            div.innerHTML = `
+            <input class="input" type="datetime-local" name="times" required>
+            <button type="button" class="btn danger" onclick="removeRow(this)">×</button>`;
+            list.appendChild(div);
+        });
+    </script>
+</th:block>
 </body>
 </html>
