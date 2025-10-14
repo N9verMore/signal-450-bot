@@ -19,3 +19,4 @@ services:
       - ./signal-cli-data:/home/.local/share/signal-cli
     env_file:
       - .env
+    network_mode: bridge
