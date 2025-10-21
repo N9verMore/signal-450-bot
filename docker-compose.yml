@@ -1,22 +1,24 @@
 services:
-  bot-450:
-    build: .
-    container_name: bot-450
-    ports:
-      - "8080:8080"
-    depends_on:
-      - signal-api
-    env_file:
-      - .env
-
   signal-api:
     image: bbernhard/signal-cli-rest-api:latest
     container_name: signal-api
     restart: unless-stopped
+    network_mode: host
     environment:
       - MODE=native
+      - PORT=8082  # Внутренний порт для signal-api
     volumes:
       - ./signal-cli-data:/home/.local/share/signal-cli
     env_file:
       - .env
-    network_mode: bridge
+
+  bot-450:
+    build: .
+    container_name: bot-450
+    network_mode: host
+    depends_on:
+      - signal-api
+    environment:
+      - SERVER_PORT=8080  # Bot-450 на порту 8080
+    env_file:
+      - .env
