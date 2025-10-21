@@ -9,13 +9,15 @@ services:
       - ./signal-cli-data:/home/.local/share/signal-cli
     networks:
       - bot-network
-    # НЕ пробрасываем порты наружу - signal-api доступен только внутри Docker сети!
 
   bot-450:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host
     container_name: bot-450
     ports:
-      - "8080:8080"  # Только bot-450 доступен снаружи
+      - "8080:8080"
     depends_on:
       - signal-api
     env_file:
