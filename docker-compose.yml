@@ -3,22 +3,26 @@ services:
     image: bbernhard/signal-cli-rest-api:latest
     container_name: signal-api
     restart: unless-stopped
-    network_mode: host
     environment:
       - MODE=native
-      - PORT=8082  # Внутренний порт для signal-api
     volumes:
       - ./signal-cli-data:/home/.local/share/signal-cli
-    env_file:
-      - .env
+    networks:
+      - bot-network
+    # НЕ пробрасываем порты наружу - signal-api доступен только внутри Docker сети!
 
   bot-450:
     build: .
     container_name: bot-450
-    network_mode: host
+    ports:
+      - "8080:8080"  # Только bot-450 доступен снаружи
     depends_on:
       - signal-api
-    environment:
-      - SERVER_PORT=8080  # Bot-450 на порту 8080
     env_file:
       - .env
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge
